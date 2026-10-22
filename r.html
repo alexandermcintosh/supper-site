@@ -70,7 +70,9 @@ async function load() {
       : "";
 
   el.innerHTML = `
-    ${r.hero_url ? `<img class="hero-img" src="${esc(r.hero_url)}" alt="">` : ""}
+    ${r.hero_url
+      ? `<img class="hero-img" src="${esc(r.hero_url)}" alt="">`
+      : `<div class="hero-img" style="display:grid;place-items:center;font-size:96px;background:linear-gradient(135deg,var(--mint),color-mix(in srgb,var(--yellow) 35%,transparent))">${esc(r.emoji || "🍽️")}</div>`}
     <h1>${esc(r.title)}</h1>
     ${from}
     ${r.description ? `<p class="muted">${esc(r.description)}</p>` : ""}
