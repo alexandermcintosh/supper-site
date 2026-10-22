@@ -60,7 +60,7 @@ async function load() {
   const host = source ? new URL(source).hostname.replace(/^www\./, "") : null;
 
   const from = r.household
-    ? `<p class="muted small">${r.loved ? "😍 A proven favorite" : "Shared"} from <strong>${esc(r.household)}</strong>'s kitchen</p>`
+    ? `<p class="muted small">${r.loved ? "😍 A proven favorite of" : "Shared by"} <strong>${esc(r.household)}</strong></p>`
     : "";
 
   const method = r.method_at_source && source
