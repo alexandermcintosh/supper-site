@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A recipe from Supper</title>
+<meta property="og:title" content="A recipe shared from Supper">
+<meta property="og:description" content="Someone thought you'd like this one.">
+<meta property="og:image" content="https://alexandermcintosh.github.io/supper-site/icon.png">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <a class="brand" href="./"><img src="icon.png" alt="">Supper</a>
+  <div id="recipe"><p class="muted">Loading recipe…</p></div>
+  <div class="card mint" style="text-align:center;margin-top:28px">
+    <p style="margin-top:0"><strong>Save recipes like this from anywhere.</strong><br><span class="muted small">Supper is a shared cookbook for your household.</span></p>
+    <a class="button" href="./">Get Supper</a>
+  </div>
+  <footer><a href="privacy.html">Privacy</a><a href="support.html">Support</a></footer>
+</main>
+<script>
+const API = "https://lrkkyqzlxzgmthrfwudl.supabase.co/functions/v1/shared-recipe";
+const CATEGORY = {
+  starters: "🫒 Starters", mains: "🍽️ Mains", sides: "🥔 Sides", soups_salads: "🥗 Soups & Salads",
+  desserts: "🍰 Desserts", drinks: "🍹 Drinks", sauces_staples: "🫙 Sauces & Staples", breakfast: "🍳 Breakfast",
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ingredientText = (i) => [i.qty, i.unit, i.item].filter(Boolean).join(" ") + (i.note ? ` (${i.note})` : "");
+const safeURL = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
+
+async function load() {
+  const el = document.getElementById("recipe");
+  const slug = new URLSearchParams(location.search).get("s") || "";
+  if (!/^[A-Za-z0-9]{8,24}$/.test(slug)) {
+    el.innerHTML = `<div class="card"><h1>Recipe not found</h1><p class="muted">This link may have been turned off.</p></div>`;
+    return;
+  }
+  let r;
+  try {
+    const res = await fetch(`${API}?s=${slug}`);
+    if (!res.ok) throw new Error();
+    r = await res.json();
+  } catch {
+    el.innerHTML = `<div class="card"><h1>Recipe not found</h1><p class="muted">This link may have been turned off.</p></div>`;
+    return;
+  }
+  document.title = `${r.title} — Supper`;
+
+  const chips = [
+    r.category && CATEGORY[r.category],
+    r.total_minutes && `⏱ ${r.total_minutes} min`,
+    r.servings && `👥 serves ${r.servings}`,
+    r.effort && `💪 ${r.effort[0].toUpperCase()}${r.effort.slice(1)}`,
+  ].filter(Boolean).map((c) => `<li class="chip yellow">${esc(c)}</li>`).join("")
+    + (r.tags || []).slice(0, 6).map((t) => `<li class="chip">${esc(t)}</li>`).join("");
+
+  const source = safeURL(r.source_url);
+  const host = source ? new URL(source).hostname.replace(/^www\./, "") : null;
+
+  const from = r.household
+    ? `<p class="muted small">${r.loved ? "😍 A proven favorite" : "Shared"} from <strong>${esc(r.household)}</strong>'s kitchen</p>`
+    : "";
+
+  const method = r.method_at_source && source
+    ? `<div class="card mint"><p style="margin:0">The full method is on the creator's page: <a href="${esc(source)}" target="_blank" rel="noopener">${esc(host)} →</a></p></div>`
+    : (r.steps || []).length
+      ? `<div class="card"><h2 style="margin-top:0">🥄 Steps</h2><ol class="steps">${r.steps.map((s) => `<li><span>${esc(s.text)}</span></li>`).join("")}</ol></div>`
+      : "";
+
+  el.innerHTML = `
+    ${r.hero_url ? `<img class="hero-img" src="${esc(r.hero_url)}" alt="">` : ""}
+    <h1>${esc(r.title)}</h1>
+    ${from}
+    ${r.description ? `<p class="muted">${esc(r.description)}</p>` : ""}
+    <ul class="chips">${chips}</ul>
+    ${(r.ingredients || []).length ? `<div class="card"><h2 style="margin-top:0">🧺 Ingredients</h2><ul class="ingredients">${r.ingredients.map((i) => `<li>${esc(ingredientText(i))}</li>`).join("")}</ul></div>` : ""}
+    ${method}
+    ${source && !r.method_at_source ? `<p class="small muted">Originally from <a href="${esc(source)}" target="_blank" rel="noopener">${esc(host)}</a></p>` : ""}
+  `;
+  el.querySelectorAll(".ingredients li").forEach((li) => li.addEventListener("click", () => li.classList.toggle("done")));
+}
+load();
+</script>
+</body>
+</html>
