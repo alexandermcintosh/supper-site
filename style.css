@@ -109,5 +109,9 @@ a { color: var(--green); }
   display: grid; place-items: center;
 }
 
+.steps li > span { min-width: 0; }
+.step-shots { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; }
+.step-shots img { width: 120px; height: 120px; object-fit: cover; border-radius: 14px; flex: 0 0 auto; }
+
 footer { text-align: center; margin-top: 40px; font-size: 0.85rem; color: var(--muted); }
 footer a { margin: 0 8px; }

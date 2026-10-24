@@ -28,6 +28,10 @@ const CATEGORY = {
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ingredientText = (i) => [i.qty, i.unit, i.item].filter(Boolean).join(" ") + (i.note ? ` (${i.note})` : "");
+const stepShots = (r, i) => {
+  const urls = ((r.step_photos || {})[i] || []).map(safeURL).filter(Boolean);
+  return urls.length ? `<span class="step-shots">${urls.map((u) => `<img src="${esc(u)}" alt="" loading="lazy">`).join("")}</span>` : "";
+};
 const safeURL = (u) => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
 
 async function load() {
@@ -66,7 +70,7 @@ async function load() {
   const method = r.method_at_source && source
     ? `<div class="card mint"><p style="margin:0">The full method is on the creator's page: <a href="${esc(source)}" target="_blank" rel="noopener">${esc(host)} →</a></p></div>`
     : (r.steps || []).length
-      ? `<div class="card"><h2 style="margin-top:0">🥄 Steps</h2><ol class="steps">${r.steps.map((s) => `<li><span>${esc(s.text)}</span></li>`).join("")}</ol></div>`
+      ? `<div class="card"><h2 style="margin-top:0">🥄 Steps</h2><ol class="steps">${r.steps.map((s, i) => `<li><span>${esc(s.text)}${stepShots(r, i)}</span></li>`).join("")}</ol></div>`
       : "";
 
   el.innerHTML = `
