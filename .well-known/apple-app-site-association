@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["ZLC2858C47.com.amcin.supper"],
+        "components": [
+          { "/": "/join", "comment": "Friend, household and club invites" },
+          { "/": "/join.html" }
+        ]
+      }
+    ]
+  }
+}

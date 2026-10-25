@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#40594a">
+<title>You're invited to Supper</title>
+<meta property="og:title" content="You're invited to Supper">
+<meta property="og:description" content="Swap recipes, see what each other cooks, and decide what's for dinner.">
+<meta property="og:image" content="https://supper.kitchen/img/og.jpg">
+<script>
+  // Once Supper is on the App Store, Safari's banner opens this invite in the app.
+  document.write('<meta name="apple-itunes-app" content="app-id=6816601528, app-argument=' + location.href.replace(/"/g, "") + '">');
+</script>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .invite { text-align: center; }
+  .invite .disc { width: 104px; height: 104px; margin: 8px auto 18px; border-radius: 50%; background: var(--tint-butter);
+                  display: grid; place-items: center; font-size: 56px; }
+  .invite h1 { margin: 0 0 8px; }
+  .invite-steps { text-align: left; margin: 26px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+  .invite-steps li { display: flex; gap: 14px; align-items: flex-start; }
+  .invite-steps b.n { flex: 0 0 30px; height: 30px; border-radius: 50%; background: var(--deep-sage); color: #fff;
+               display: grid; place-items: center; font-size: 0.9rem; }
+  .invite-steps p { margin: 3px 0 10px; }
+  .button[aria-disabled="true"] { background: var(--well); color: var(--ink-muted); box-shadow: none; pointer-events: none; }
+  .copy { background: var(--tint-sage); color: var(--brand-text); border: 0; font: inherit; font-weight: 600;
+          padding: 10px 18px; border-radius: 999px; cursor: pointer; min-height: 44px; }
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="./" aria-label="Supper home"><img src="img/lockup.png" alt="Supper"></a>
+  <div class="card invite" id="invite">
+    <div class="disc" id="emoji" aria-hidden="true">🍲</div>
+    <h1 id="title">You're invited to Supper</h1>
+    <p class="muted" id="sub">Swap recipes, see what each other cooks, and decide what's for dinner.</p>
+    <ol class="invite-steps">
+      <li><b class="n">1</b><div><p><strong>Get Supper on your iPhone.</strong></p>
+        <a class="button" id="store" href="https://apps.apple.com/app/id6816601528">Download on the App Store</a></div></li>
+      <li><b class="n">2</b><div><p><strong>Tap your invite link again.</strong> It opens right in Supper. Or copy it and paste it into Supper.</p>
+        <button class="copy" id="copy" type="button">Copy invite link</button></div></li>
+    </ol>
+  </div>
+  <footer><a href="privacy.html">Privacy</a><a href="support.html">Support</a><a href="guidelines.html">Guidelines</a></footer>
+</main>
+<script>
+// Flip to true the day Supper is approved.
+const APP_LIVE = false;
+const API = "https://lrkkyqzlxzgmthrfwudl.supabase.co/rest/v1/rpc/invite_preview";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxya2t5cXpseHpnbXRocmZ3dWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMjExNTYsImV4cCI6MjEwNDc5NzE1Nn0.dfhgtXLlGcavVGtfFLG-D3RsxVVXexfDoZy5gmiN6Yg";
+
+const store = document.getElementById("store");
+if (!APP_LIVE) {
+  store.textContent = "Coming soon to the App Store";
+  store.setAttribute("aria-disabled", "true");
+  store.removeAttribute("href");
+}
+
+document.getElementById("copy").addEventListener("click", async (e) => {
+  try { await navigator.clipboard.writeText(location.href); e.target.textContent = "Copied"; }
+  catch { e.target.textContent = location.href; }
+});
+
+const params = new URLSearchParams(location.search);
+const [kind, code] = [["f", params.get("f")], ["h", params.get("h")], ["c", params.get("c")]].find(([, v]) => v) || [];
+const set = (id, text) => { document.getElementById(id).textContent = text; };
+
+async function load() {
+  if (!kind || !/^[A-Za-z0-9]{4,16}$/.test(code)) return;
+  let who = null;
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { apikey: KEY, authorization: `Bearer ${KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ kind, code }),
+    });
+    if (res.ok) who = await res.json();
+  } catch {}
+  if (!who) {
+    set("title", "That invite doesn't work any more");
+    set("sub", "Ask them to send a fresh link.");
+    document.querySelector(".invite-steps").style.display = "none";
+    return;
+  }
+  if (who.emoji) set("emoji", who.emoji);
+  const verb = who.name.startsWith("The ") ? "want" : "wants";
+  if (kind === "f") {
+    set("title", `${who.name} ${verb} to swap recipes`);
+    set("sub", "Open the invite in Supper and you're friends: you'll see each other's cooks and the recipes you each choose to share.");
+  } else if (kind === "c") {
+    set("title", `Join ${who.name}`);
+    set("sub", "A cooking club on Supper. Post what you make, drool over theirs.");
+  } else {
+    set("title", `Join ${who.name}'s kitchen`);
+    set("sub", `You'll share one cookbook on Supper: every recipe, plan and buy list. Invite code: ${code.toUpperCase()}`);
+  }
+  document.title = document.getElementById("title").textContent + " · Supper";
+}
+load();
+</script>
+</body>
+</html>
