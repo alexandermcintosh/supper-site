@@ -53,7 +53,7 @@ a:focus-visible, .button:focus-visible { outline: 2px solid var(--deep-sage); ou
 
 /* Brand header (the lockup is artwork, never retyped) */
 .brand { display: inline-flex; align-items: center; text-decoration: none; }
-.brand img { height: 46px; width: auto; display: block; mix-blend-mode: multiply; }
+.brand img { height: 46px; width: auto; display: block; }
 
 .card {
   background: var(--raised);
