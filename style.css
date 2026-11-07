@@ -103,6 +103,10 @@ a:focus-visible, .button:focus-visible { outline: 2px solid var(--deep-sage); ou
 }
 .band-top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .band-top .brand img { height: 54px; }
+/* Mushroom image + live wordmark: crisp at any size, light on the green band. */
+.brand.wordmark { gap: 8px; }
+.brand.wordmark img { height: 52px; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.28)); }
+.brand.wordmark span { font-weight: 700; font-size: 2.05rem; letter-spacing: -0.035em; line-height: 1; color: var(--porcelain); padding-bottom: 4px; }
 .band-top a.small { color: var(--on-band-muted); }
 .band-copy { padding: 24px 0 56px; }
 .eyebrow { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--on-band-muted); margin: 0; text-wrap: balance; }
