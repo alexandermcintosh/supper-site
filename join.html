@@ -39,7 +39,7 @@
     <ol class="invite-steps">
       <li><b class="n">1</b><div><p><strong>Get Supper on your iPhone.</strong></p>
         <a class="button" id="store" href="https://apps.apple.com/app/id6816601528">Download on the App Store</a></div></li>
-      <li><b class="n">2</b><div><p><strong>Tap your invite link again.</strong> It opens right in Supper. Or copy it and paste it into Supper.</p>
+      <li><b class="n">2</b><div><p><strong>Open Supper and tap Paste</strong> when it asks if someone sent you an invite. The Download button copies your invite for you. Or just tap your invite link again once Supper is installed.</p>
         <button class="copy" id="copy" type="button">Copy invite link</button></div></li>
     </ol>
   </div>
@@ -57,6 +57,15 @@ if (!APP_LIVE) {
   store.setAttribute("aria-disabled", "true");
   store.removeAttribute("href");
 }
+
+// iOS forgets the link across the App Store install, so carry it on the
+// clipboard; Supper's setup screen has a Paste button for it.
+store.addEventListener("click", async (e) => {
+  if (!APP_LIVE || !new URLSearchParams(location.search).toString()) return;
+  e.preventDefault();
+  try { await navigator.clipboard.writeText(location.href); } catch {}
+  location.href = store.href;
+});
 
 document.getElementById("copy").addEventListener("click", async (e) => {
   try { await navigator.clipboard.writeText(location.href); e.target.textContent = "Copied"; }
