@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#40594a">
+<title>Supper admin</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css?v=20261107">
+<style>
+  body { background: var(--surface); }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px var(--gutter) 60px; }
+  .top { background: var(--deep-sage); color: #fff; }
+  .top .wrap { display: flex; align-items: center; gap: 14px; padding-top: 18px; padding-bottom: 18px; }
+  .top img { width: 40px; height: 40px; }
+  .top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; flex: 1; }
+  .top button { background: var(--band-tile); color: #fff; }
+  h2 { font-size: 1.15rem; margin: 30px 0 12px; }
+  .muted { color: var(--ink-muted); }
+  .small { font-size: 0.85rem; }
+  button, .btn { font: inherit; font-weight: 600; border: 0; border-radius: 999px; padding: 9px 16px; cursor: pointer;
+                 background: var(--tint-sage); color: var(--brand-text); min-height: 40px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  button.primary { background: var(--deep-sage); color: #fff; }
+  button.butter { background: var(--tint-butter); color: #6b5513; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .card { background: var(--raised); border-radius: 22px; box-shadow: var(--shadow); padding: 18px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .tile { background: var(--raised); border-radius: 18px; box-shadow: var(--shadow); padding: 14px 16px; }
+  .tile .n { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+  .tile .l { font-size: 0.85rem; color: var(--ink-muted); }
+  .tile .s { font-size: 0.8rem; color: var(--brand-text); margin-top: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chips button { padding: 6px 12px; min-height: 34px; font-size: 0.9rem; background: var(--well); color: var(--ink); }
+  .chips button.on { background: var(--deep-sage); color: #fff; }
+  .chart { position: relative; height: 260px; }
+  input[type=email], input[type=password], input[type=search] { font: inherit; width: 100%; padding: 12px 14px; border-radius: 14px;
+                 border: 1px solid var(--line); background: var(--well); min-height: 46px; }
+  form.signin { max-width: 380px; margin: 60px auto; display: grid; gap: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th { text-align: left; font-weight: 600; color: var(--ink-muted); font-size: 0.8rem; padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; }
+  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr.k { cursor: pointer; }
+  tr.k:hover td { background: #fafbf9; }
+  .scroll { overflow-x: auto; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+  .p-subscribed { background: #dcebe0; color: #2f4a3a; }
+  .p-gifted { background: var(--tint-butter); color: #6b5513; }
+  .p-comped { background: #e6e1f5; color: #4a3d7a; }
+  .p-free { background: var(--well); color: var(--ink-muted); }
+  .detail td { background: #fafbf9; }
+  .members { display: grid; gap: 8px; margin-bottom: 12px; }
+  .member { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .feed li { display: flex; gap: 10px; align-items: baseline; }
+  .feed .when { flex: 0 0 90px; color: var(--ink-muted); font-size: 0.82rem; }
+  .links { display: grid; gap: 10px; }
+  .link { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .link code { flex: 1; min-width: 220px; background: var(--well); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; overflow-wrap: anywhere; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .error { color: #a33a2a; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--deep-sage); color: #fff;
+           padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <img src="img/mushroom.png" alt="">
+    <h1>Supper admin</h1>
+    <span id="who" class="small" style="color: var(--on-band-muted)"></span>
+    <button id="refresh" hidden>Refresh</button>
+    <button id="signout" hidden>Sign out</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <form class="signin card" id="signin" hidden>
+    <h2 style="margin:0">Sign in</h2>
+    <p class="muted small" style="margin:0">Use your Supper account. Only admin accounts see anything here.</p>
+    <input type="email" id="email" autocomplete="username" placeholder="Email" required>
+    <input type="password" id="password" autocomplete="current-password" placeholder="Password" required>
+    <button class="primary" type="submit">Sign in</button>
+    <p id="signinError" class="error small" style="margin:0"></p>
+  </form>
+
+  <p id="status" class="muted"></p>
+
+  <div id="dash" hidden>
+    <section>
+      <h2>At a glance</h2>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section>
+      <h2>Usage</h2>
+      <div class="card">
+        <div class="chips" id="metricChips"></div>
+        <div class="chips" id="rangeChips"></div>
+        <div class="chart"><canvas id="chart"></canvas></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Kitchens</h2>
+      <div class="card">
+        <input type="search" id="search" placeholder="Search kitchens, names or emails" style="margin-bottom:12px">
+        <div class="scroll"><table id="kitchens"></table></div>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section>
+        <h2>Recent activity</h2>
+        <div class="card"><ul class="feed" id="feed"></ul></div>
+      </section>
+      <section>
+        <h2>Links</h2>
+        <div class="card links" id="links"></div>
+      </section>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const URL_ = "https://lrkkyqzlxzgmthrfwudl.supabase.co";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxya2t5cXpseHpnbXRocmZ3dWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMjExNTYsImV4cCI6MjEwNDc5NzE1Nn0.dfhgtXLlGcavVGtfFLG-D3RsxVVXexfDoZy5gmiN6Yg";
+const APP_ID = "6816601528";
+const sb = supabase.createClient(URL_, KEY, { auth: { persistSession: true, storageKey: "supper-admin" } });
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "–";
+function ago(d) {
+  if (!d) return "never";
+  const s = (Date.now() - new Date(d)) / 1000;
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m ago";
+  if (s < 86400) return Math.round(s / 3600) + "h ago";
+  if (s < 86400 * 60) return Math.round(s / 86400) + "d ago";
+  return fmtDate(d);
+}
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1800); }
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast("Copied"); } catch { prompt("Copy this:", text); } }
+
+let overview = null, usage = [], chart = null;
+let metric = "active_kitchens", range = 30, sortKey = "last_active", sortDir = -1, open = new Set();
+
+const METRICS = [
+  ["active_kitchens", "Active kitchens"], ["cooks", "Cooks logged"], ["recipes", "Recipes saved"],
+  ["new_people", "Signups"], ["new_kitchens", "New kitchens"], ["captures", "AI captures"],
+  ["chef_questions", "Chef questions"], ["chat_messages", "Chef chat messages"],
+];
+
+// ---- auth -------------------------------------------------------------
+$("signin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("signinError").textContent = "";
+  const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+  if (error) { $("signinError").textContent = error.message; return; }
+  $("password").value = "";
+  boot();
+});
+$("signout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$("refresh").onclick = () => load();
+
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $("signin").hidden = false; $("dash").hidden = true; $("signout").hidden = true; $("refresh").hidden = true; return; }
+  $("signin").hidden = true; $("signout").hidden = false; $("refresh").hidden = false;
+  $("who").textContent = session.user.email;
+  load();
+}
+
+async function load() {
+  $("status").textContent = "Loading…";
+  const [o, u] = await Promise.all([sb.rpc("admin_overview"), sb.rpc("admin_usage", { days: 365 })]);
+  if (o.error) {
+    $("dash").hidden = true;
+    $("status").innerHTML = /admin/i.test(o.error.message)
+      ? "This account isn't an admin."
+      : `<span class="error">${esc(o.error.message)}</span>`;
+    return;
+  }
+  overview = o.data; usage = u.data || [];
+  $("status").textContent = `Updated ${new Date(overview.generated_at).toLocaleTimeString()}`;
+  $("dash").hidden = false;
+  renderTiles(); renderChips(); renderChart(); renderKitchens(); renderFeed(); renderLinks();
+}
+
+// ---- tiles ------------------------------------------------------------
+function renderTiles() {
+  const t = overview.totals;
+  const tile = (n, l, s = "") => `<div class="tile"><div class="n">${n}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+  $("tiles").innerHTML = [
+    tile(t.kitchens, "Kitchens", `+${t.new_kitchens_7d} this week`),
+    tile(t.people, "People", `+${t.new_people_7d} this week`),
+    tile(t.active_7d, "Active this week", `${t.active_30d} this month`),
+    tile(t.subscribed, "Supper+ subscribers", `${t.gifted} gifted · ${t.comped} comped · ${t.free} free`),
+    tile(t.cooks_7d, "Cooks this week", `${t.cooks} all time`),
+    tile(t.recipes, "Recipes"),
+    tile(t.captures_month, "AI captures", "this month"),
+    tile(t.chef_month + t.chat_month, "Chef questions + chats", `${t.chef_month} quick · ${t.chat_month} chat, this month`),
+    tile(t.friendships, "Friendships"),
+    tile(t.notifications_on, "People with notifications"),
+  ].join("");
+}
+
+// ---- chart ------------------------------------------------------------
+function renderChips() {
+  $("metricChips").innerHTML = METRICS.map(([k, l]) => `<button data-m="${k}" class="${k === metric ? "on" : ""}">${l}</button>`).join("");
+  $("rangeChips").innerHTML = [[14, "2 weeks"], [30, "30 days"], [90, "90 days"], [365, "Year"]]
+    .map(([d, l]) => `<button data-r="${d}" class="${d === range ? "on" : ""}">${l}</button>`).join("");
+  $("metricChips").onclick = (e) => { const m = e.target.dataset.m; if (m) { metric = m; renderChips(); renderChart(); } };
+  $("rangeChips").onclick = (e) => { const r = +e.target.dataset.r; if (r) { range = r; renderChips(); renderChart(); } };
+}
+
+function renderChart() {
+  const rows = usage.slice(-range);
+  const weekly = range > 90;
+  let labels = rows.map((r) => r.day), values = rows.map((r) => r[metric]);
+  if (weekly) {
+    const L = [], V = [];
+    for (let i = 0; i < rows.length; i += 7) {
+      const chunk = rows.slice(i, i + 7);
+      L.push(chunk[0].day);
+      V.push(metric === "active_kitchens" ? Math.max(...chunk.map((r) => r[metric])) : chunk.reduce((a, r) => a + r[metric], 0));
+    }
+    labels = L; values = V;
+  }
+  const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const data = { labels: labels.map(fmt), datasets: [{ data: values, backgroundColor: "#91b59b", hoverBackgroundColor: "#40594a", borderRadius: 4, maxBarThickness: 22 }] };
+  const options = {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => (weekly ? "Week of " : "") + i[0].label } } },
+    scales: { y: { beginAtZero: true, ticks: { precision: 0, color: "#585f5a" }, grid: { color: "#eceeea" } },
+              x: { ticks: { color: "#585f5a", maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, grid: { display: false } } },
+  };
+  if (chart) { chart.data = data; chart.options = options; chart.update(); }
+  else chart = new Chart($("chart"), { type: "bar", data, options });
+}
+
+// ---- kitchens ---------------------------------------------------------
+const COLS = [
+  ["name", "Kitchen"], ["members", "People"], ["plus", "Supper+"], ["last_active", "Last active"],
+  ["recipes", "Recipes"], ["cooks", "Cooks"], ["cooks_30d", "30d"], ["friends", "Friends"],
+  ["captures", "Captures"], ["chef_questions", "Chef"], ["created_at", "Joined"],
+];
+const plusLabel = (p) => p.status === "subscribed" ? `Subscribed${p.product ? " · " + (/year/i.test(p.product) ? "yearly" : "monthly") : ""}`
+  : p.status === "gifted" ? `Gift until ${fmtDate(p.until)}` : p.status === "comped" ? "Comped" : "Free";
+function sortVal(k, key) {
+  if (key === "members") return k.members.length;
+  if (key === "plus") return ["subscribed", "comped", "gifted", "free"].indexOf(k.plus.status);
+  if (key === "name") return (k.name || "").toLowerCase();
+  if (key === "last_active" || key === "created_at") return k[key] ? new Date(k[key]).getTime() : 0;
+  return k[key] ?? 0;
+}
+
+function renderKitchens() {
+  const q = $("search").value.trim().toLowerCase();
+  const list = overview.kitchens.filter((k) => !q || [k.name, ...k.members.flatMap((m) => [m.email, m.name])]
+    .some((s) => (s || "").toLowerCase().includes(q)));
+  list.sort((a, b) => { const x = sortVal(a, sortKey), y = sortVal(b, sortKey); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  const head = `<tr>${COLS.map(([k, l]) => `<th data-k="${k}">${l}${k === sortKey ? (sortDir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
+  const rows = list.map((k) => {
+    const main = `<tr class="k" data-id="${k.id}">
+      <td><b>${esc(k.emoji || "")} ${esc(k.name)}</b>${k.referred_by ? `<div class="small muted">via ${esc(k.referred_by)}</div>` : ""}</td>
+      <td>${k.members.length}</td>
+      <td><span class="pill p-${k.plus.status}">${esc(plusLabel(k.plus))}</span></td>
+      <td>${ago(k.last_active)}</td>
+      <td>${k.recipes}${k.easy_nights ? `<span class="muted small"> +${k.easy_nights} easy</span>` : ""}</td>
+      <td>${k.cooks}</td><td>${k.cooks_30d}</td><td>${k.friends}</td>
+      <td>${k.captures}</td><td>${k.chef_questions}</td><td>${fmtDate(k.created_at)}</td></tr>`;
+    if (!open.has(k.id)) return main;
+    const members = k.members.map((m) => `<div class="member">
+        <b>${esc(m.name || m.email)}</b>${m.name ? `<span class="muted">${esc(m.email)}</span>` : ""}
+        <span class="small muted">signed up ${fmtDate(m.signed_up_at)}</span>
+        <span class="small muted">last sign-in ${ago(m.last_sign_in_at)}</span>
+        <span class="small muted">last opened ${ago(m.last_opened_at)}</span>
+        <span class="small muted">${m.notifications ? "notifications on" : "no notifications"}</span>
+        ${m.admin ? `<span class="pill p-comped">admin</span>` : ""}</div>`).join("");
+    const joinLink = k.friend_invite_token ? `https://supper.kitchen/join?f=${k.friend_invite_token}` : null;
+    const houseLink = k.invite_code ? `https://supper.kitchen/join?h=${k.invite_code}` : null;
+    const detail = `<tr class="detail"><td colspan="${COLS.length}">
+        <div class="members">${members || '<span class="muted">No members</span>'}</div>
+        <div class="small muted" style="margin-bottom:10px">Sharing with friends: ${esc(k.share_mode)}${k.plus.status === "free" && k.plus.lapsed ? ` · subscription lapsed ${fmtDate(k.plus.lapsed)}` : ""}</div>
+        <div class="actions">
+          <button class="butter" data-gift="${k.id}">Gift a month of Supper+</button>
+          <button data-comp="${k.id}" data-on="${k.plus_comped ? "0" : "1"}">${k.plus_comped ? "Remove comp" : "Comp Supper+ for good"}</button>
+          ${joinLink ? `<button data-copy="${joinLink}">Copy friend invite link</button>` : ""}
+          ${houseLink ? `<button data-copy="${houseLink}">Copy join-kitchen link</button>` : ""}
+        </div></td></tr>`;
+    return main + detail;
+  }).join("");
+  $("kitchens").innerHTML = head + (rows || `<tr><td colspan="${COLS.length}" class="muted">No kitchens match.</td></tr>`);
+}
+$("search").addEventListener("input", renderKitchens);
+$("kitchens").addEventListener("click", async (e) => {
+  const th = e.target.closest("th");
+  if (th) { const k = th.dataset.k; sortDir = k === sortKey ? -sortDir : (k === "name" ? 1 : -1); sortKey = k; renderKitchens(); return; }
+  const b = e.target.closest("button");
+  if (b?.dataset.copy) return copy(b.dataset.copy);
+  if (b?.dataset.gift) {
+    const k = overview.kitchens.find((x) => x.id === b.dataset.gift);
+    if (!confirm(`Give ${k.name} a month of Supper+? It adds to any gift they already have.`)) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc("admin_gift_month", { h: k.id });
+    if (error) { alert(error.message); b.disabled = false; return; }
+    k.plus = data; toast(`Gifted a month to ${k.name}`); renderKitchens(); renderTiles(); return;
+  }
+  if (b?.dataset.comp) {
+    const k = overview.kitchens.find((x) => x.id === b.dataset.comp);
+    const on = b.dataset.on === "1";
+    if (!confirm(on ? `Give ${k.name} Supper+ for good?` : `Take away ${k.name}'s comped Supper+?`)) return;
+    b.disabled = true;
+    const { data, error } = await sb.rpc("admin_set_comped", { h: k.id, comped: on });
+    if (error) { alert(error.message); b.disabled = false; return; }
+    k.plus = data; k.plus_comped = on; toast(on ? "Comped" : "Comp removed"); renderKitchens(); return;
+  }
+  const row = e.target.closest("tr.k");
+  if (row) { const id = row.dataset.id; open.has(id) ? open.delete(id) : open.add(id); renderKitchens(); }
+});
+
+// ---- feed + links -----------------------------------------------------
+function renderFeed() {
+  const icon = { signup: "👋", cook: "🍳", recipe: "📖", kitchen: "🏠" };
+  const text = (e) => e.kind === "signup" ? `New account: ${esc(e.what)}`
+    : e.kind === "kitchen" ? `New kitchen: ${esc(e.what)}`
+    : e.kind === "cook" ? `${esc(e.kitchen)} made ${esc(e.what)}` : `${esc(e.kitchen)} saved ${esc(e.what)}`;
+  $("feed").innerHTML = overview.recent.slice(0, 25).map((e) =>
+    `<li><span class="when">${ago(e.at)}</span><span>${icon[e.kind] || ""} ${text(e)}</span></li>`).join("") || `<li class="muted">Quiet month.</li>`;
+}
+
+function renderLinks() {
+  const links = [
+    ["Free-year offer code (SUPPERFRIENDS)", `https://apps.apple.com/redeem?ctx=offercodes&id=${APP_ID}&code=SUPPERFRIENDS`],
+    ["App Store page", `https://apps.apple.com/app/id${APP_ID}`],
+    ["Website", "https://supper.kitchen"],
+  ];
+  const tools = [
+    ["App Store Connect", `https://appstoreconnect.apple.com/apps/${APP_ID}/distribution`],
+    ["Offer codes (ASC)", `https://appstoreconnect.apple.com/apps/${APP_ID}/distribution/subscriptions`],
+    ["TestFlight", `https://appstoreconnect.apple.com/apps/${APP_ID}/testflight/ios`],
+    ["Supabase", "https://supabase.com/dashboard/project/lrkkyqzlxzgmthrfwudl"],
+  ];
+  $("links").innerHTML =
+    links.map(([l, u]) => `<div><div class="small muted">${l}</div><div class="link"><code>${esc(u)}</code><button data-copy="${esc(u)}">Copy</button></div></div>`).join("") +
+    `<div class="small muted" style="margin-top:6px">Tools</div><div class="actions">${tools.map(([l, u]) => `<a class="btn" href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join("")}</div>`;
+}
+$("links").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b?.dataset.copy) copy(b.dataset.copy); });
+
+boot();
+</script>
+</body>
+</html>
