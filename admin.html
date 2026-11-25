@@ -9,13 +9,16 @@
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="style.css?v=20261107">
 <style>
+  [hidden] { display: none !important; }
+  html, body { max-width: 100%; overflow-x: hidden; }
   body { background: var(--surface); }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 20px var(--gutter) 60px; }
   .top { background: var(--deep-sage); color: #fff; }
-  .top .wrap { display: flex; align-items: center; gap: 14px; padding-top: 18px; padding-bottom: 18px; }
-  .top img { width: 40px; height: 40px; }
-  .top h1 { margin: 0; font-size: 1.35rem; font-weight: 700; flex: 1; }
-  .top button { background: var(--band-tile); color: #fff; }
+  .top .wrap { display: flex; align-items: center; gap: 10px; padding-top: 14px; padding-bottom: 14px; }
+  .top img { width: 36px; height: 36px; flex: 0 0 auto; }
+  .top h1 { margin: 0; font-size: 1.3rem; font-weight: 700; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top button { background: var(--band-tile); color: #fff; padding: 7px 14px; min-height: 36px; white-space: nowrap; }
+  #who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   h2 { font-size: 1.15rem; margin: 30px 0 12px; }
   .muted { color: var(--ink-muted); }
   .small { font-size: 0.85rem; }
@@ -43,6 +46,7 @@
   tr.k { cursor: pointer; }
   tr.k:hover td { background: #fafbf9; }
   .scroll { overflow-x: auto; }
+  .show-sm { display: none; }
   .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
   .p-subscribed { background: #dcebe0; color: #2f4a3a; }
   .p-gifted { background: var(--tint-butter); color: #6b5513; }
@@ -57,8 +61,18 @@
   .feed .when { flex: 0 0 90px; color: var(--ink-muted); font-size: 0.82rem; }
   .links { display: grid; gap: 10px; }
   .link { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .link code { flex: 1; min-width: 220px; background: var(--well); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; overflow-wrap: anywhere; }
-  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .link code { flex: 1; min-width: 0; background: var(--well); padding: 8px 12px; border-radius: 12px; font-size: 0.82rem; overflow-wrap: anywhere; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px; }
+  .grid2 > *, .wrap > * { min-width: 0; }
+  @media (max-width: 700px) {
+    #who { display: none; }
+    .hide-sm { display: none; }
+    .show-sm { display: block !important; margin-top: 4px; }
+    td.name { min-width: 150px; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tile .n { font-size: 1.6rem; }
+    td, th { padding: 9px 6px; }
+  }
   .error { color: #a33a2a; }
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--deep-sage); color: #fff;
            padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; pointer-events: none; }
@@ -69,7 +83,7 @@
 <header class="top">
   <div class="wrap">
     <img src="img/mushroom.png" alt="">
-    <h1>Supper admin</h1>
+    <h1><span class="hide-sm">Supper </span>Admin</h1>
     <span id="who" class="small" style="color: var(--on-band-muted)"></span>
     <button id="refresh" hidden>Refresh</button>
     <button id="signout" hidden>Sign out</button>
@@ -246,10 +260,11 @@ function renderChart() {
 
 // ---- kitchens ---------------------------------------------------------
 const COLS = [
-  ["name", "Kitchen"], ["members", "People"], ["plus", "Supper+"], ["last_active", "Last active"],
-  ["recipes", "Recipes"], ["cooks", "Cooks"], ["cooks_30d", "30d"], ["friends", "Friends"],
-  ["captures", "Captures"], ["chef_questions", "Chef"], ["created_at", "Joined"],
+  ["name", "Kitchen"], ["members", "People", true], ["plus", "Supper+", true], ["last_active", "Last active"],
+  ["recipes", "Recipes", true], ["cooks", "Cooks"], ["cooks_30d", "30d", true], ["friends", "Friends", true],
+  ["captures", "Captures", true], ["chef_questions", "Chef", true], ["created_at", "Joined", true],
 ];
+const sm = (i) => COLS[i][2] ? ' class="hide-sm"' : "";
 const plusLabel = (p) => p.status === "subscribed" ? `Subscribed${p.product ? " · " + (/year/i.test(p.product) ? "yearly" : "monthly") : ""}`
   : p.status === "gifted" ? `Gift until ${fmtDate(p.until)}` : p.status === "comped" ? "Comped" : "Free";
 function sortVal(k, key) {
@@ -265,16 +280,17 @@ function renderKitchens() {
   const list = overview.kitchens.filter((k) => !q || [k.name, ...k.members.flatMap((m) => [m.email, m.name])]
     .some((s) => (s || "").toLowerCase().includes(q)));
   list.sort((a, b) => { const x = sortVal(a, sortKey), y = sortVal(b, sortKey); return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
-  const head = `<tr>${COLS.map(([k, l]) => `<th data-k="${k}">${l}${k === sortKey ? (sortDir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
+  const head = `<tr>${COLS.map(([k, l, hide]) => `<th data-k="${k}"${hide ? ' class="hide-sm"' : ""}>${l}${k === sortKey ? (sortDir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr>`;
   const rows = list.map((k) => {
     const main = `<tr class="k" data-id="${k.id}">
-      <td><b>${esc(k.emoji || "")} ${esc(k.name)}</b>${k.referred_by ? `<div class="small muted">via ${esc(k.referred_by)}</div>` : ""}</td>
-      <td>${k.members.length}</td>
-      <td><span class="pill p-${k.plus.status}">${esc(plusLabel(k.plus))}</span></td>
+      <td class="name"><b>${esc(k.emoji || "")} ${esc(k.name)}</b>${k.referred_by ? `<div class="small muted">via ${esc(k.referred_by)}</div>` : ""}
+        <div class="show-sm"><span class="pill p-${k.plus.status}">${esc(plusLabel(k.plus))}</span></div></td>
+      <td${sm(1)}>${k.members.length}</td>
+      <td${sm(2)}><span class="pill p-${k.plus.status}">${esc(plusLabel(k.plus))}</span></td>
       <td>${ago(k.last_active)}</td>
-      <td>${k.recipes}${k.easy_nights ? `<span class="muted small"> +${k.easy_nights} easy</span>` : ""}</td>
-      <td>${k.cooks}</td><td>${k.cooks_30d}</td><td>${k.friends}</td>
-      <td>${k.captures}</td><td>${k.chef_questions}</td><td>${fmtDate(k.created_at)}</td></tr>`;
+      <td${sm(4)}>${k.recipes}${k.easy_nights ? `<span class="muted small"> +${k.easy_nights} easy</span>` : ""}</td>
+      <td>${k.cooks}</td><td${sm(6)}>${k.cooks_30d}</td><td${sm(7)}>${k.friends}</td>
+      <td${sm(8)}>${k.captures}</td><td${sm(9)}>${k.chef_questions}</td><td${sm(10)}>${fmtDate(k.created_at)}</td></tr>`;
     if (!open.has(k.id)) return main;
     const members = k.members.map((m) => `<div class="member">
         <b>${esc(m.name || m.email)}</b>${m.name ? `<span class="muted">${esc(m.email)}</span>` : ""}
