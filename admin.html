@@ -288,7 +288,7 @@ function renderKitchens() {
       <td${sm(1)}>${k.members.length}</td>
       <td${sm(2)}><span class="pill p-${k.plus.status}">${esc(plusLabel(k.plus))}</span></td>
       <td>${ago(k.last_active)}</td>
-      <td${sm(4)}>${k.recipes}${k.easy_nights ? `<span class="muted small"> +${k.easy_nights} easy</span>` : ""}</td>
+      <td${sm(4)}>${k.recipes}${k.easy_nights ? `<span class="muted small"> +${k.easy_nights} easy</span>` : ""}${k.places ? `<span class="muted small"> +${k.places} places</span>` : ""}</td>
       <td>${k.cooks}</td><td${sm(6)}>${k.cooks_30d}</td><td${sm(7)}>${k.friends}</td>
       <td${sm(8)}>${k.captures}</td><td${sm(9)}>${k.chef_questions}</td><td${sm(10)}>${fmtDate(k.created_at)}</td></tr>`;
     if (!open.has(k.id)) return main;
